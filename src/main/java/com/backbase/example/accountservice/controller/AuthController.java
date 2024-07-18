@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * This controller is used for a for user to do login and logout operations
+ */
 @RestController
 public class AuthController {
 
@@ -31,6 +34,12 @@ public class AuthController {
     private SessionManagementService sessionManagementService;
 
 
+    /**
+     * This method handles login of a user
+     * @param authRequest
+     * @return token It returns JWT token if a user successfully logged in
+     * @throws Exception
+     */
     @PostMapping("/login")
     public String login(@RequestBody AuthRequest authRequest) throws Exception {
         if (sessionManagementService.isSessionActive(authRequest.getUsername())) {
@@ -47,6 +56,12 @@ public class AuthController {
         return token;
     }
 
+    /**
+     * This method is used for logout operation of a user
+     * @param authRequest
+     * @param authorizationHeader
+     * @return It returns successful message for logout of a user
+     */
     @PostMapping("/logout")
     public String logout(@RequestBody AuthRequest authRequest, @RequestHeader("Authorization") String authorizationHeader) {
         String token = authorizationHeader.substring(7);

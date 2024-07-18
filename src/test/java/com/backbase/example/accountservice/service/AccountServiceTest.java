@@ -1,5 +1,6 @@
 package com.backbase.example.accountservice.service;
 
+import com.backbase.example.accountservice.dto.AccountDto;
 import com.backbase.example.accountservice.entity.Account;
 import com.backbase.example.accountservice.repository.AccountRepository;
 import org.junit.jupiter.api.Assertions;
@@ -79,10 +80,11 @@ public class AccountServiceTest {
 
     @Test
     public void testCreateAccount() {
-        Account account = new Account(1L, "Account1", "123456789");
+        AccountDto accountDto = new AccountDto(1L, "Account1", "123456789");
+        Account account = new Account(accountDto.getId(), accountDto.getAccountName(), accountDto.getAccountNumber());
         when(accountRepository.save(any(Account.class))).thenReturn(account);
 
-        Account result = accountService.createAccount(account);
+        Account result = accountService.createAccount(accountDto);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals("Account1", result.getAccountName());
@@ -90,11 +92,12 @@ public class AccountServiceTest {
 
     @Test
     public void testUpdateAccount() {
-        Account account = new Account(1L, "UpdatedAccount", "123456789");
+        AccountDto accountDto = new AccountDto(1L, "UpdatedAccount", "123456789");
+        Account account = new Account(accountDto.getId(), accountDto.getAccountName(), accountDto.getAccountNumber());
         when(accountRepository.findById(anyLong())).thenReturn(Optional.of(account));
         when(accountRepository.save(any(Account.class))).thenReturn(account);
 
-        Optional<Account> result = accountService.updateAccount(1L, account);
+        Optional<Account> result = accountService.updateAccount(1L, accountDto);
 
         Assertions.assertTrue(result.isPresent());
         Assertions.assertEquals("UpdatedAccount", result.get().getAccountName());
