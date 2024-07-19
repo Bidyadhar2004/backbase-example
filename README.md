@@ -11,6 +11,12 @@ The Account Service is a RESTful API that manages account information. It provid
 - **Get Account**: Retrieve account details by account number or name.
 - **Get All Accounts**: List all accounts with pagination support.
 
+Note: Above REST end points are secured. So, accessing end points User needs to be authenticated first. For this have provided below additional endpoints , user has to log-in first and then access above end points.
+
+- **Login User** :  User should login by provided JWT token.
+- **Log out USer**: User should log out after complete their operation.
+
+
 ## Getting Started
 
 ### Prerequisites
