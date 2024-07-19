@@ -10,26 +10,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.data.domain.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 @SpringBootTest
 public class AccountServiceTest {
 
-    @MockBean
+    @Mock
     private AccountRepository accountRepository;
 
     @InjectMocks
@@ -44,12 +42,14 @@ public class AccountServiceTest {
     public void testGetAllAccountsWithPagination() {
         Account account1 = new Account(1L, "Account1", "123456789");
         Account account2 = new Account(2L, "Account2", "987654321");
-        Pageable pageable = PageRequest.of(0, 2);
-        Page<Account> accountPage = new PageImpl<>(Arrays.asList(account1, account2), pageable, 2);
 
-        when(accountRepository.findAll(any(Pageable.class))).thenReturn(accountPage);
+        List<Account> accounts = Arrays.asList(account1, account2);
+        Pageable pageable = PageRequest.of(0, 2, Sort.by("id").ascending());
+        Page<Account> accountPage = new PageImpl<>(accounts, pageable, accounts.size());
 
-        Page<Account> result = accountService.getAllAccounts(0, 2);
+        when(accountRepository.findAll(pageable)).thenReturn(accountPage);
+
+        Page<Account> result = accountService.getAllAccounts(pageable);
 
         Assertions.assertEquals(2, result.getTotalElements());
         Assertions.assertEquals(1, result.getContent().get(0).getId());
@@ -80,7 +80,11 @@ public class AccountServiceTest {
 
     @Test
     public void testCreateAccount() {
-        AccountDto accountDto = new AccountDto(1L, "Account1", "123456789");
+        AccountDto accountDto = new AccountDto();
+        accountDto.setId(1L);
+        accountDto.setAccountName("Account1");
+        accountDto.setAccountNumber("123456789");
+
         Account account = new Account(accountDto.getId(), accountDto.getAccountName(), accountDto.getAccountNumber());
         when(accountRepository.save(any(Account.class))).thenReturn(account);
 
@@ -92,14 +96,18 @@ public class AccountServiceTest {
 
     @Test
     public void testUpdateAccount() {
-        AccountDto accountDto = new AccountDto(1L, "UpdatedAccount", "123456789");
-        Account account = new Account(accountDto.getId(), accountDto.getAccountName(), accountDto.getAccountNumber());
-        when(accountRepository.findById(anyLong())).thenReturn(Optional.of(account));
-        when(accountRepository.save(any(Account.class))).thenReturn(account);
+        Long accountId = 1L;
+        AccountDto accountDto = new AccountDto();
+        accountDto.setAccountName("Updated Account");
+        accountDto.setAccountNumber("345123456");
+        Account updatedAccount = new Account(accountId, accountDto.getAccountName(), accountDto.getAccountNumber());
+
+        when(accountRepository.findById(1L)).thenReturn(Optional.of(updatedAccount));
+        when(accountRepository.save(updatedAccount)).thenReturn(updatedAccount);
 
         Optional<Account> result = accountService.updateAccount(1L, accountDto);
 
         Assertions.assertTrue(result.isPresent());
-        Assertions.assertEquals("UpdatedAccount", result.get().getAccountName());
+        Assertions.assertEquals("Updated Account", result.get().getAccountName());
     }
 }

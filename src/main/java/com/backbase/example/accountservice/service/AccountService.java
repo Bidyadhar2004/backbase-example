@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,17 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    public Page<Account> getAllAccounts(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        logger.info("Getting All Account details using page {} and size {}", page, size);
-        logger.info("Getting All accounts of a user from repository {}", accountRepository.findAll(pageable));
-        return accountRepository.findAll(pageable);
+    public Page<Account> getAllAccounts(Pageable pageable) {
+
+        logger.info("Getting All Account details using pagination");
+
+        if (accountRepository == null) {
+            System.out.println("AccountRepository is null!");
+        } else {
+            System.out.println("AccountRepository is properly injected.");
+        }
+        Page<Account> accounts = accountRepository.findAll(pageable);
+        return accounts;
     }
 
     public Optional<Account> getAccountByAccountNumber(String accountNumber) {
