@@ -81,11 +81,10 @@ public class AccountServiceTest {
     @Test
     public void testCreateAccount() {
         AccountDto accountDto = new AccountDto();
-        accountDto.setId(1L);
         accountDto.setAccountName("Account1");
         accountDto.setAccountNumber("123456789");
 
-        Account account = new Account(accountDto.getId(), accountDto.getAccountName(), accountDto.getAccountNumber());
+        Account account = new Account(1L, accountDto.getAccountName(), accountDto.getAccountNumber());
         when(accountRepository.save(any(Account.class))).thenReturn(account);
 
         Account result = accountService.createAccount(accountDto);
@@ -99,15 +98,19 @@ public class AccountServiceTest {
         Long accountId = 1L;
         AccountDto accountDto = new AccountDto();
         accountDto.setAccountName("Updated Account");
-        accountDto.setAccountNumber("345123456");
-        Account updatedAccount = new Account(accountId, accountDto.getAccountName(), accountDto.getAccountNumber());
+        accountDto.setAccountNumber("987654321");
 
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(updatedAccount));
-        when(accountRepository.save(updatedAccount)).thenReturn(updatedAccount);
+        Account existingAccount = new Account(accountId, "Old Account", "123456789");
+        Account updatedAccount = new Account(accountId, "Updated Account", "987654321");
 
-        Optional<Account> result = accountService.updateAccount(1L, accountDto);
+        when(accountRepository.existsById(accountId)).thenReturn(true);
+        when(accountRepository.save(any(Account.class))).thenReturn(updatedAccount);
 
+        // Act
+        Optional<Account> result = accountService.updateAccount(accountId, accountDto);
+
+        // Assert
         Assertions.assertTrue(result.isPresent());
-        Assertions.assertEquals("Updated Account", result.get().getAccountName());
+        Assertions.assertEquals(updatedAccount, result.get());
     }
 }

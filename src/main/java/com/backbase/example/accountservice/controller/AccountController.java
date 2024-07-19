@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -40,7 +41,10 @@ public class AccountController {
         logger.info("Get all accounts of a user");
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
 
-        return accountService.getAllAccounts(pageable);
+        Page<Account> accountPage = accountService.getAllAccounts(pageable);
+        logger.info("Page: {}, Size: {}, Total Elements: {}", page, size, accountPage.getTotalElements());
+
+        return accountPage;
     }
 
     /**
@@ -51,16 +55,28 @@ public class AccountController {
      */
     @Operation(summary = "Get specific account details")
     @GetMapping("/account")
-    public Optional<Account> getAccount(
+    public ResponseEntity<?> getAccount(
             @RequestParam(required = false) String accountNumber,
             @RequestParam(required = false) String accountName) {
+        logger.info("Received request to get account with accountNumber: {} and accountName: {}", accountNumber, accountName);
+
+        logger.info("Received request to get account with accountNumber: {} and accountName: {}", accountNumber, accountName);
+
+        Optional<Account> account;
         if (accountNumber != null) {
-            return accountService.getAccountByAccountNumber(accountNumber);
+            account = accountService.getAccountByAccountNumber(accountNumber);
         } else if (accountName != null) {
-            return accountService.getAccountByAccountName(accountName);
+            account = accountService.getAccountByAccountName(accountName);
+        } else {
+            logger.info("No accountNumber or accountName provided, returning bad request.");
+            return ResponseEntity.badRequest().body("Please provide accountNumber or accountName.");
         }
-        logger.info("Getting account details based on accountNumber or accountName");
-        return Optional.empty();
+
+        if (account.isPresent()) {
+            return ResponseEntity.ok(account.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 
@@ -84,8 +100,17 @@ public class AccountController {
      */
     @Operation(summary = "Update Account")
     @PutMapping("/accounts/{id}")
-    public Optional<Account> updateAccount(@PathVariable Long id, @RequestBody AccountDto accountDto) {
-        logger.info("Account is updated for {}", id);
-        return accountService.updateAccount(id, accountDto);
+    public ResponseEntity<Account> updateAccount(@PathVariable Long id, @RequestBody AccountDto accountDto) {
+        logger.info("Updating account with ID: {}", id);
+
+        Optional<Account> updatedAccount = accountService.updateAccount(id, accountDto);
+
+        if (updatedAccount.isPresent()) {
+            // Return the updated account with HTTP 200 OK status
+            return ResponseEntity.ok(updatedAccount.get());
+        } else {
+            // Return HTTP 404 Not Found if the account was not found
+            return ResponseEntity.notFound().build();
+        }
     }
 }

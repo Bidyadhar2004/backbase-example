@@ -25,45 +25,42 @@ public class AccountService {
     private AccountRepository accountRepository;
 
     public Page<Account> getAllAccounts(Pageable pageable) {
-
         logger.info("Getting All Account details using pagination");
-
-        if (accountRepository == null) {
-            System.out.println("AccountRepository is null!");
-        } else {
-            System.out.println("AccountRepository is properly injected.");
-        }
         Page<Account> accounts = accountRepository.findAll(pageable);
         return accounts;
     }
 
     public Optional<Account> getAccountByAccountNumber(String accountNumber) {
-        logger.info("Getting Account details using accountNumber {}", accountNumber);
-        logger.info("Getting Account details using accountNumber from repository {}", accountRepository.findByAccountNumber(accountNumber));
+        logger.info("Fetching account by account number: {}", accountNumber);
         return accountRepository.findByAccountNumber(accountNumber);
     }
 
     public Optional<Account> getAccountByAccountName(String accountName) {
-        logger.info("Getting Account details using accountName {}", accountName);
-        logger.info("Getting Account details using accountName from repository {}", accountRepository.findByAccountName(accountName));
+        logger.info("Fetching account by account name: {}", accountName);
         return accountRepository.findByAccountName(accountName);
     }
 
     public Account createAccount(AccountDto accountDto) {
         Account account = new Account();
-        account.setId(accountDto.getId());
+        account.setAccountName(accountDto.getAccountName());
         account.setAccountNumber(accountDto.getAccountNumber());
-        account.setAccountName(account.getAccountName());
         logger.info("Account is created");
         return accountRepository.save(account);
     }
 
-    public Optional<Account> updateAccount(Long id, AccountDto updatedAccount) {
-        logger.info("Account is updated");
-        return accountRepository.findById(id).map(existingAccount -> {
-            existingAccount.setAccountNumber(updatedAccount.getAccountNumber());
-            existingAccount.setAccountName(updatedAccount.getAccountName());
-            return accountRepository.save(existingAccount);
-        });
+    public Optional<Account> updateAccount(Long id, AccountDto accountDto) {
+        // Check if the account exists
+        if (accountRepository.existsById(id)) {
+            Account account = new Account();
+            account.setId(id);
+            account.setAccountName(accountDto.getAccountName());
+            account.setAccountNumber(accountDto.getAccountNumber());
+            // Save the updated account
+            Account updatedAccount = accountRepository.save(account);
+            return Optional.of(updatedAccount);
+        } else {
+            // Return Optional.empty() if the account does not exist
+            return Optional.empty();
+        }
     }
 }
